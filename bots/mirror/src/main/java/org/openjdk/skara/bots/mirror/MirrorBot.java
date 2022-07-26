@@ -32,6 +32,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.util.*;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -59,7 +60,7 @@ class MirrorBot implements Bot, WorkItem {
         this.from = from;
         this.to = to;
         this.branches = branches;
-        this.shouldMirrorEverything = branches.isEmpty();
+        this.shouldMirrorEverything = to.branches().isEmpty();
         this.includeTags = includeTags;
     }
 
@@ -79,7 +80,6 @@ class MirrorBot implements Bot, WorkItem {
                 URLEncoder.encode(to.webUrl().toString(), StandardCharsets.UTF_8);
             var dir = storage.resolve(sanitizedUrl);
             Repository repo = null;
-
 
             if (!Files.exists(dir)) {
                 log.info("Cloning " + from.name());
@@ -104,8 +104,8 @@ class MirrorBot implements Bot, WorkItem {
                 repo.pushAll(to.url());
             } else {
                 for (var branch : branches) {
-                    var fetchHead = repo.fetch(from.url(), branch.name(), includeTags);
-                    repo.push(fetchHead, to.url(), branch.name(), false, includeTags);
+                        var fetchHead = repo.fetch(from.url(), branch.name(), includeTags);
+                        repo.push(fetchHead, to.url(), branch.name(), false, includeTags);
                 }
             }
 

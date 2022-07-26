@@ -23,11 +23,13 @@
 package org.openjdk.skara.bots.mirror;
 
 import org.openjdk.skara.bot.*;
+import org.openjdk.skara.forge.HostedBranch;
 import org.openjdk.skara.vcs.Branch;
 
 import java.io.*;
 import java.nio.file.Files;
 import java.util.*;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.logging.Logger;
 
@@ -58,11 +60,22 @@ public class MirrorBotFactory implements BotFactory {
             var toName = repo.get("to").asString();
             var toRepo = configuration.repository(toName);
 
-            var branchNames = repo.contains("branches")?
-                repo.get("branches").asString().split(",") : new String[0];
-            var branches = Arrays.stream(branchNames)
-                                 .map(Branch::new)
-                                 .collect(Collectors.toList());
+//            var branchNames = repo.contains("branches")?
+//                repo.get("branches").asString().split(",") : new String[0];
+
+//            var branches = Arrays.stream(branchNames)
+//                                 .map(Branch::new)
+//                                 .collect(Collectors.toList());
+
+            var fromBranches = fromRepo.branches();
+            var branchRegex = "^" + fromRepo.name().substring(fromRepo.name().lastIndexOf("/"))+ "[0-9][0-9]";
+            var toBranches = toRepo.branches();
+            var newlyAddedBranches = fromBranches.stream().map(x->x.name().substring(x.name().lastIndexOf("/")))
+                                            .filter(x->!toBranches.contains(x) && x.matches(branchRegex)).toArray(String[]::new);
+            var branches = Arrays.stream(newlyAddedBranches)
+                    .map(Branch::new)
+                    .collect(Collectors.toList());
+
 
             var includeTags = repo.contains("tags") && repo.get("tags").asBoolean();
 
